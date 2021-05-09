@@ -26,7 +26,7 @@ def display_score_event(frame: np.ndarray, coord: list[tuple], ball: Ball) -> np
         cv2.putText(frame,
                     'GOAL: ' + ball.color,
                     coord,
-                    font, 1,
+                    font, 0.5,
                     (0, 255, 255),
                     1,
                     cv2.LINE_4)
@@ -42,7 +42,7 @@ def display_collision_event(frame: np.ndarray, balls: list[Ball]) -> np.ndarray:
                 cv2.putText(frame,
                             'COLLISION',
                             (int(ball.previous_x), int(ball.previous_y)),
-                            font, 1,
+                            font, 0.5,
                             (255, 0, 0),
                             1,
                             cv2.LINE_4)
