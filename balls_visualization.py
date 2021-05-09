@@ -5,7 +5,25 @@ from Ball import Ball
 
 
 def draw_circles_around_balls(frame: np.ndarray, processed_frame: np.ndarray) -> (np.ndarray, list[cv2.KeyPoint]):
-    detector = cv2.SimpleBlobDetector_create()
+    params = cv2.SimpleBlobDetector_Params()
+
+    # Change thresholds
+    params.minThreshold = 10
+    params.maxThreshold = 200
+    # Filter by Area.
+    params.filterByArea = True
+    params.minArea = 50
+    # Filter by Circularity
+    params.filterByCircularity = False
+    params.minCircularity = 0.1
+    # Filter by Convexity
+    params.filterByConvexity = False
+    params.minConvexity = 0.87
+    # Filter by Inertia
+    params.filterByInertia = True
+    params.minInertiaRatio = 0.1
+
+    detector = cv2.SimpleBlobDetector_create(params)
     keypoints = detector.detect(processed_frame)
     img_with_keypoints = cv2.drawKeypoints(frame, keypoints, np.array([]), (0, 0, 255),
                                            cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
@@ -68,6 +86,7 @@ def quadratic_equation_roots(a: float, b: float, c: float) -> float:
 
 
 def display_ball_data(frame: np.ndarray, balls: list[Ball]) -> np.ndarray:
+    return frame
     font = cv2.FONT_HERSHEY_SIMPLEX
 
     for ball in balls:
@@ -78,7 +97,7 @@ def display_ball_data(frame: np.ndarray, balls: list[Ball]) -> np.ndarray:
             cv2.putText(frame,
                         text,
                         (x, y),
-                        font, 0.4,
+                        font, 0.2,
                         (0, 255, 255),
                         1,
                         cv2.LINE_4)
