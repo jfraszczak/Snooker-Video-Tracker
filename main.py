@@ -42,7 +42,7 @@ def process_frame_holes_extraction(frame: np.ndarray) -> np.ndarray:
     colors_range = [(0, 0, 180), (255, 100, 255)]
     img_binary = process_frame(frame, colors_range)
 
-    kernel = np.ones((13, 13), np.uint8)
+    kernel = np.ones((9, 9), np.uint8)
     image = cv2.erode(img_binary, kernel)
 
     return image
@@ -314,7 +314,9 @@ def process_video(video_name: str):
     first_frame = True
     while cap.isOpened():
         start = time()
-        ret, frame = cap.read()
+        read_successful, frame = cap.read()
+        if not read_successful: # end of clip
+            break
         processed_frame = process_frame_balls_extraction(frame)
         img_with_keypoints, keypoints = draw_circles_around_balls(frame, processed_frame)
 
