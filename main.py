@@ -28,7 +28,7 @@ def process_frame(frame: np.ndarray, colors_range: list[tuple]) -> np.ndarray:
 
 # Wyciągnięcie z obrazu tylko kul poprzez odfiltrowanie zielonego koloru
 def process_frame_balls_extraction(frame: np.ndarray) -> np.ndarray:
-    colors_range = [(36, 100, 100), (70, 255, 255)]
+    colors_range = [(36, 100, 100), (65, 255, 255)]
     img_binary = process_frame(frame, colors_range)
 
     kernel = np.ones((1, 1), np.uint8)
@@ -337,7 +337,7 @@ def process_video(video_name: str):
 
         cv2.imshow('FRAME', img_with_scores)
 
-        if cv2.waitKey(1) == ord('q'):  # Introduce 1 milisecond delay. press q to exit.
+        if cv2.waitKey(max(1, 30 - int((time() - start) * 1000))) == ord('q'):  # Introduce 1 milisecond delay. press q to exit.
             break
         print(int((time() - start) * 1000))
 
