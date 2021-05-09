@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+from time import time
 
 from Ball import Ball
 from balls_visualization import *
@@ -21,11 +22,8 @@ def process_frame(frame: np.ndarray, colors_range: list[tuple]) -> np.ndarray:
     blurred_frame = cv2.GaussianBlur(frame, (7, 7), 1.41)
     hsv = cv2.cvtColor(blurred_frame, cv2.COLOR_BGR2HSV)
     mask = cv2.inRange(hsv, colors_range[0], colors_range[1])
-    filtered = apply_mask(blurred_frame, mask)
-    gray_frame = cv2.cvtColor(filtered, cv2.COLOR_BGR2GRAY)
-    thresh, img_binary = cv2.threshold(gray_frame, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
 
-    return img_binary
+    return mask
 
 
 # Wyciągnięcie z obrazu tylko kul poprzez odfiltrowanie zielonego koloru
@@ -146,8 +144,6 @@ def hsv_to_color(hsv: tuple) -> str:
     if 20 < h < 29 and s > 0.15 and 0.3 < v < 0.75:
         return 'brown'
     else:
-        # for i in range(10):
-        #     print(h,s,v)
         return 'pink'
 
 
@@ -157,7 +153,6 @@ def set_colors(balls: list[Ball], processed_frame: np.ndarray, frame: np.ndarray
             continue
 
         mask = extract_ball_mask(processed_frame, int(ball.x), int(ball.y))
-
         masked = apply_mask(frame, mask)
         hsv = cv2.cvtColor(masked, cv2.COLOR_BGR2HSV)
         h = np.asarray(hsv[:, :, 0]).reshape(-1)
@@ -318,6 +313,7 @@ def process_video(video_name: str):
     cap = cv2.VideoCapture(video_name)
     first_frame = True
     while cap.isOpened():
+        start = time()
         ret, frame = cap.read()
         processed_frame = process_frame_balls_extraction(frame)
         img_with_keypoints, keypoints = draw_circles_around_balls(frame, processed_frame)
@@ -343,6 +339,7 @@ def process_video(video_name: str):
 
         if cv2.waitKey(1) == ord('q'):  # Introduce 1 milisecond delay. press q to exit.
             break
+        print(int((time() - start) * 1000))
 
 
 process_video("video_low.mp4")
