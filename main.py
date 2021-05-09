@@ -137,7 +137,7 @@ def hsv_to_color(hsv: tuple) -> str:
         return 'white'
     if (h < 20 or h > 351) and s > 0.7 and v > 0.3:
         return 'red'
-    if 29 < h < 64 and s > 0.15 and v > 0.3:
+    if 28 < h < 64 and s > 0.15 and v > 0.3:
         return 'yellow'
     if 64 < h < 80 and s > 0.15 and v > 0.3:
         return 'green'
@@ -146,6 +146,8 @@ def hsv_to_color(hsv: tuple) -> str:
     if 20 < h < 29 and s > 0.15 and 0.3 < v < 0.75:
         return 'brown'
     else:
+        # for i in range(10):
+        #     print(h,s,v)
         return 'pink'
 
 
@@ -155,8 +157,8 @@ def set_colors(balls: list[Ball], processed_frame: np.ndarray, frame: np.ndarray
             continue
 
         mask = extract_ball_mask(processed_frame, int(ball.x), int(ball.y))
-        masked = apply_mask(frame, mask)
 
+        masked = apply_mask(frame, mask)
         hsv = cv2.cvtColor(masked, cv2.COLOR_BGR2HSV)
         h = np.asarray(hsv[:, :, 0]).reshape(-1)
         s = np.asarray(hsv[:, :, 1]).reshape(-1)
@@ -179,16 +181,19 @@ def colors_of_keypoints(keypoints: list[cv2.KeyPoint], frame: np.ndarray, proces
         x, y = keypoint.pt[0], keypoint.pt[1]
 
         mask = extract_ball_mask(processed_frame, int(x), int(y))
-        masked = apply_mask(frame, mask)
+
+        masked = frame[mask > 0]
+        masked = masked[:40]
+        masked = masked.reshape(min(40,masked.shape[0]), 1, 3)
 
         hsv = cv2.cvtColor(masked, cv2.COLOR_BGR2HSV)
         h = np.asarray(hsv[:, :, 0]).reshape(-1)
         s = np.asarray(hsv[:, :, 1]).reshape(-1)
         v = np.asarray(hsv[:, :, 2]).reshape(-1)
 
-        h_mean = np.true_divide(h.sum(), (h != 0).sum())
-        s_mean = np.true_divide(s.sum(), (s != 0).sum()) / 255
-        v_mean = np.true_divide(v.sum(), (v != 0).sum()) / 255
+        h_mean = np.mean(h)
+        s_mean = np.mean(s) / 255
+        v_mean = np.mean(v) / 255
 
         hsv = (h_mean, s_mean, v_mean)
         color = hsv_to_color(hsv)
@@ -340,4 +345,4 @@ def process_video(video_name: str):
             break
 
 
-process_video("video3.mp4")
+process_video("video_low.mp4")
