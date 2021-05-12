@@ -326,7 +326,7 @@ def process_video(video_name: str):
             first_frame = False
             show_balls(balls)
             holes_coordinates = find_holes_coordinates(frame)
-            movement_array = balls_movement
+            movement_array = [False] * len(balls)
 
         img_with_keypoints = display_ball_data(img_with_keypoints, balls)
         img_with_holes = highlight_holes(img_with_keypoints, holes_coordinates)
