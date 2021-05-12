@@ -41,7 +41,6 @@ def process_frame_balls_extraction(frame: np.ndarray) -> np.ndarray:
 def process_frame_holes_extraction(frame: np.ndarray) -> np.ndarray:
     colors_range = [(0, 0, 180), (255, 100, 255)]
     img_binary = process_frame(frame, colors_range)
-
     kernel = np.ones((9, 9), np.uint8)
     image = cv2.erode(img_binary, kernel)
 
@@ -153,15 +152,17 @@ def set_colors(balls: list[Ball], processed_frame: np.ndarray, frame: np.ndarray
             continue
 
         mask = extract_ball_mask(processed_frame, int(ball.x), int(ball.y))
-        masked = apply_mask(frame, mask)
+        masked = frame[mask > 0]
+        masked = masked.reshape(masked.shape[0], 1, 3)
+
         hsv = cv2.cvtColor(masked, cv2.COLOR_BGR2HSV)
         h = np.asarray(hsv[:, :, 0]).reshape(-1)
         s = np.asarray(hsv[:, :, 1]).reshape(-1)
         v = np.asarray(hsv[:, :, 2]).reshape(-1)
 
-        h_mean = np.true_divide(h.sum(), (h != 0).sum())
-        s_mean = np.true_divide(s.sum(), (s != 0).sum()) / 255
-        v_mean = np.true_divide(v.sum(), (v != 0).sum()) / 255
+        h_mean = np.mean(h)
+        s_mean = np.mean(s) / 255
+        v_mean = np.mean(v) / 255
 
         hsv = (h_mean, s_mean, v_mean)
         color = hsv_to_color(hsv)
@@ -176,10 +177,8 @@ def colors_of_keypoints(keypoints: list[cv2.KeyPoint], frame: np.ndarray, proces
         x, y = keypoint.pt[0], keypoint.pt[1]
 
         mask = extract_ball_mask(processed_frame, int(x), int(y))
-
         masked = frame[mask > 0]
-        masked = masked[:40]
-        masked = masked.reshape(min(40,masked.shape[0]), 1, 3)
+        masked = masked.reshape(masked.shape[0], 1, 3)
 
         hsv = cv2.cvtColor(masked, cv2.COLOR_BGR2HSV)
         h = np.asarray(hsv[:, :, 0]).reshape(-1)
