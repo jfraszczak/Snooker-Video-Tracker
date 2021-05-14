@@ -35,9 +35,13 @@ class Ball:
         self.iterations_without_moving = 0
         self.iterations_being_invisible = 0
         self.iterations_after_score = 0
+        self.iterations_back_in_game = 0
 
         self.collided = False
         self.iterations_after_collision = 0
+
+        self.score_coordinates = ()
+        self.collision_coordinates = ()
 
     def set_color(self, color: str):
         self.color = color
@@ -50,12 +54,15 @@ class Ball:
         print('TRAJECTORY: a = {}, b = {}'.format(self.trajectory_a, self.trajectory_b))
         print('PREVIOUS TRAJECTORY: a = {}, b = {}'.format(self.previous_trajectory_a, self.previous_trajectory_b))
         print('INVISIBLE:', self.iterations_being_invisible)
+        print('SCORED:', self.scored)
         print('SINCE SCORING:', self.iterations_after_score)
+        print('SCORE COORDINATES:', self.score_coordinates)
+        print('COLLISION COORDINATES:', self.collision_coordinates)
 
     def same_position(self, x: float, y: float) -> bool:
         if self.x is None and self.y is None:
             return False
-        return ((self.x - x) ** 2 + (self.y - y) ** 2) ** 0.5 < 1
+        return ((self.x - x) ** 2 + (self.y - y) ** 2) ** 0.5 < 2
 
     def moved(self) -> bool:
         if self.x is None and self.y is None:
@@ -67,7 +74,7 @@ class Ball:
             self.previous_trajectory_a = self.trajectory_a
             self.previous_trajectory_b = self.trajectory_b
 
-        if not (self.x is None or self.y is None) and not (self.previous_x is None or self.previous_y is None):
+        if not (self.x is None or self.y is None) and not (self.previous_x is None or self.previous_y is None) and self.x != self.previous_x:
             self.trajectory_a = (self.y - self.previous_y) / (self.x - self.previous_x)
             self.trajectory_b = self.y - self.trajectory_a * self.x
             self.moving_forward = self.x > self.previous_x
@@ -117,9 +124,16 @@ class Ball:
         self.iterations_without_moving = 0
         self.iterations_being_invisible = 0
         self.iterations_after_score = 0
+        self.iterations_back_in_game = 0
 
         self.moving = False
         self.moving_forward = None
+
+        self.score_coordinates = ()
+
+    def collide(self):
+        self.collided = True
+        self.collision_coordinates = (int(self.previous_x), int(self.previous_y))
 
     def update(self, new_x=None, new_y=None):
         self.update_position(new_x, new_y)
@@ -132,9 +146,11 @@ class Ball:
             if self.iterations_after_score < 50:
                 self.iterations_after_score += 1
             if not self.is_invisible():
-                self.back_in_game()
-                print('\n\nBACK IN GAME')
-                self.show()
+                self.iterations_back_in_game += 1
+                if self.iterations_back_in_game == 50:
+                    self.back_in_game()
+                    print('\n\nBACK IN GAME')
+                    self.show()
 
         if self.collided:
             if self.iterations_after_collision < 50:
@@ -142,6 +158,7 @@ class Ball:
             else:
                 self.collided = False
                 self.iterations_after_collision = 0
+                self.collision_coordinates = ()
 
     def known_position(self) -> bool:
         return not (self.x is None and self.y is None)
@@ -186,11 +203,11 @@ class Ball:
                     min_distance = dist
                     closest_coordinates = coordinates[i]
 
-                if not self.scored:
-                    print('\n\nSCORE')
-                    self.show()
+            if not self.scored:
+                print('\n\nSCORE')
+                self.show()
+            self.scored = True
+            self.score_coordinates = closest_coordinates
+            return
 
-                self.scored = True
-
-            return closest_coordinates
-        return ()
+        self.score_coordinates = ()

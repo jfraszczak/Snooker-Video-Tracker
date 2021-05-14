@@ -20,15 +20,15 @@ def highlight_holes(frame: np.ndarray, coordinates: list[tuple]) -> np.ndarray:
     return frame
 
 
-def display_score_event(frame: np.ndarray, coord: list[tuple], ball: Ball) -> np.ndarray:
+def display_score_event(frame: np.ndarray, ball: Ball) -> np.ndarray:
     if ball.iterations_after_score < 50:
         font = cv2.FONT_HERSHEY_SIMPLEX
         cv2.putText(frame,
                     'GOAL: ' + ball.color,
-                    coord,
-                    font, 0.5,
-                    (0, 255, 255),
-                    1,
+                    (ball.score_coordinates[0] - 50, ball.score_coordinates[1]),
+                    font, 0.6,
+                    (0, 0, 255),
+                    2,
                     cv2.LINE_4)
 
     return frame
@@ -41,7 +41,7 @@ def display_collision_event(frame: np.ndarray, balls: list[Ball]) -> np.ndarray:
                 font = cv2.FONT_HERSHEY_SIMPLEX
                 cv2.putText(frame,
                             'COLLISION',
-                            (int(ball.previous_x), int(ball.previous_y)),
+                            ball.collision_coordinates,
                             font, 0.5,
                             (255, 0, 0),
                             1,
@@ -73,7 +73,7 @@ def display_ball_data(frame: np.ndarray, balls: list[Ball]) -> np.ndarray:
     for ball in balls:
         if ball.known_position():
             x, y = int(ball.x), int(ball.y)
-            text = ball.color + ' ' + str(ball.moving)
+            text = ball.color + ' ' + ('moving' if ball.moving else '')
 
             cv2.putText(frame,
                         text,

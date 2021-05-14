@@ -5,6 +5,8 @@ from time import time
 from Ball import Ball
 from balls_visualization import *
 
+import moviepy.video.io.ImageSequenceClip
+
 # PRZETWORZENIE OBRAZU METODAMI MORFOLOGICZNYMI
 # ------------------------------------------------------------------------
 
@@ -130,7 +132,7 @@ def hsv_to_color(hsv: tuple) -> str:
 
     if v < 0.3:
         return 'black'
-    if s < 0.3 and v > 0.65:
+    if s < 0.4 and v > 0.65:
         return 'white'
     if (h < 20 or h > 351) and s > 0.7 and v > 0.3:
         return 'red'
@@ -222,7 +224,7 @@ def update_balls(balls: list[Ball], keypoints: list[cv2.KeyPoint], frame: np.nda
     unknown_keypoints = keypoints[:]
 
     for ball in balls:
-        if ball.scored:
+        if ball.scored and ball.color == 'red':
             ball.update()
             continue
 
@@ -245,7 +247,7 @@ def update_balls(balls: list[Ball], keypoints: list[cv2.KeyPoint], frame: np.nda
 def match_balls_with_remaining_keypoints(balls: list[Ball], balls_to_update: list[Ball], keypoints: list[cv2.KeyPoint]):
     remaining_balls = []
     for ball in balls_to_update:
-        if ball.scored:
+        if ball.scored and ball.color == 'red':
             continue
 
         found_corresponding_keypoint = False
@@ -273,7 +275,7 @@ def match_balls_with_remaining_keypoints(balls: list[Ball], balls_to_update: lis
     if len(keypoints) == 1:
         for ball in balls:
             if ball.scored and ball.color != 'red':
-                ball.show()
+                #ball.show()
                 x, y = keypoints[0][0]
                 ball.update(x, y)
                 break
@@ -281,9 +283,11 @@ def match_balls_with_remaining_keypoints(balls: list[Ball], balls_to_update: lis
 
 def detect_scores(balls: list[Ball], holes_coordinates: list[tuple], frame: np.ndarray) -> (np.ndarray, list[Ball]):
     for ball in balls:
-        coord = ball.detect_score(holes_coordinates)
-        if coord != ():
-            frame = display_score_event(frame, coord, ball)
+        if not ball.scored:
+            ball.detect_score(holes_coordinates)
+        else:
+            frame = display_score_event(frame, ball)
+
 
     return frame, balls
 
@@ -300,15 +304,20 @@ def detect_collision(balls: list[Ball], movement_array) -> list[bool]:
     number_of_moving_balls = np.sum(np.array(movement_array))
     for i in range(len(balls)):
         ball = balls[i]
-        new_movement_array.append(ball.moving)
-        if ball.moving and not movement_array[i] and number_of_moving_balls > 1:
+        if not ball.scored:
+            new_movement_array.append(ball.moving)
+        else:
+            new_movement_array.append(False)
+        if ball.moving and not movement_array[i] and number_of_moving_balls > 0 and ball.color != 'white' and not ball.scored:
             print('\n\nCOLLISION')
             ball.show()
-            ball.collided = True
+            ball.collide()
+        #print(movement_array)
     return new_movement_array
 
 
-def process_video(video_name: str):
+def process_video(video_name: str, video_to_save: str):
+    image_files = []
     cap = cv2.VideoCapture(video_name)
     first_frame = True
     while cap.isOpened():
@@ -323,9 +332,9 @@ def process_video(video_name: str):
             balls = initialize_balls(keypoints)
             balls = set_colors(balls, processed_frame, frame)
             first_frame = False
-            show_balls(balls)
             holes_coordinates = find_holes_coordinates(frame)
             movement_array = [False] * len(balls)
+            #show_balls(balls)
 
         img_with_keypoints = display_ball_data(img_with_keypoints, balls)
         img_with_holes = highlight_holes(img_with_keypoints, holes_coordinates)
@@ -338,9 +347,18 @@ def process_video(video_name: str):
 
         cv2.imshow('FRAME', img_with_scores)
 
+        # cv2.imshow('FRAME', processed_frame)
+        # cv2.waitKey(10000000)
+
+        if read_successful:
+            image_files.append(cv2.cvtColor(img_with_scores, cv2.COLOR_BGR2RGB))
+
         if cv2.waitKey(max(1, 30 - int((time() - start) * 1000))) == ord('q'):  # Introduce 1 milisecond delay. press q to exit.
             break
-        print(int((time() - start) * 1000))
+        #print(int((time() - start) * 1000))
+
+    clip = moviepy.video.io.ImageSequenceClip.ImageSequenceClip(image_files, fps=30)
+    clip.write_videofile(video_to_save)
 
 
-process_video("video_low.mp4")
+process_video("videos/clip2.mp4", 'out/clip2.mp4')
