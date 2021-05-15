@@ -33,10 +33,7 @@ def process_frame_balls_extraction(frame: np.ndarray) -> np.ndarray:
     colors_range = [(36, 100, 100), (65, 255, 255)]
     img_binary = process_frame(frame, colors_range)
 
-    kernel = np.ones((1, 1), np.uint8)
-    image = cv2.dilate(img_binary, kernel)
-
-    return image
+    return img_binary
 
 
 # Wyciągnięcie z obrazu tylko dziur poprzez odfiltorwanie obszarów, które nie są białe
